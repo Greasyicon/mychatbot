@@ -38,7 +38,7 @@ query_wrapper_prompt = PromptTemplate(
 
 llm = HuggingFaceLLM(
     context_window=4096,
-    max_new_tokens=2,
+    max_new_tokens=20,
     # generate_kwargs={"temperature": 0.0, "do_sample": True},
     query_wrapper_prompt=query_wrapper_prompt,
     tokenizer_name=hf_model_repo,
