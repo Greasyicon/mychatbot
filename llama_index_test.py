@@ -3,8 +3,15 @@ import sys
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
-
-from IPython.display import Markdown, display
+import os
+os.environ['CURL_CA_BUNDLE'] = ''
+token = os.environ.get('HUGGINGFACE_TOKEN')
+if token:
+    # Use the token for your operations
+    print(f"-----______________--------- Hugging Face Token is set") #
+else:
+    print("WARNING ---- ______ -----Hugging Face Token not set or not found! May be Required to Download Model from Hugging Face hub.")
+# from IPython.display import Markdown, display
 
 import torch
 from llama_index import VectorStoreIndex, SimpleDirectoryReader, ServiceContext, set_global_service_context
@@ -13,7 +20,7 @@ from llama_index.llms import HuggingFaceLLM
 
 # To load a specific model, specify the model name:
 hf_model_repo_quant = "TheBloke/Llama-2-7b-Chat-GPTQ" # "TheBloke/Llama-2-13B-GPTQ" #
-
+hf_model_repo = "meta-llama/Llama-2-7b-chat-hf"
 
 SYSTEM_PROMPT = """You are an AI assistant that answers questions in a friendly manner, based on the given source documents. 
 Here are some rules you always follow:
@@ -31,19 +38,21 @@ query_wrapper_prompt = PromptTemplate(
 
 llm = HuggingFaceLLM(
     context_window=4096,
-    max_new_tokens=2048,
+    max_new_tokens=2,
     # generate_kwargs={"temperature": 0.0, "do_sample": True},
     query_wrapper_prompt=query_wrapper_prompt,
-    tokenizer_name=hf_model_repo_quant,
-    model_name=hf_model_repo_quant,
+    tokenizer_name=hf_model_repo,
+    model_name=hf_model_repo,
     device_map="auto",
     # change these settings below depending on your GPU
-    model_kwargs={"torch_dtype": torch.float16}, #, "load_in_8bit": True
+    model_kwargs={"torch_dtype": torch.float32, "token":token}, #, "load_in_8bit": True
 )
 
+dir = os.getcwd()
+# print(dir)
 # load documents
 documents = SimpleDirectoryReader(
-    "C:\Projects\Llama2\data"
+    f"{dir}\data"
 ).load_data()
 print(documents)
 

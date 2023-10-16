@@ -7,19 +7,27 @@
 # from transformers import AutoModel
 
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, GPTQConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM #, GPTQConfig
 
 import json
 import textwrap, time
 
 timeStart = time.time()
 
+import os
+os.environ['CURL_CA_BUNDLE'] = ''
+token = os.environ.get('HUGGINGFACE_TOKEN')
+if token:
+    # Use the token for your operations
+    print(f"Token is: {token}")
+else:
+    print("Token not set or not found!")
 
 hf_model_repo_quant = "TheBloke/Llama-2-7b-Chat-GPTQ" # "TheBloke/Llama-2-13B-GPTQ" #
 hf_model_repo = "meta-llama/Llama-2-7b-chat-hf"#, "meta-llama/Llama-2-7b-hf", "meta-llama/Llama-2-13b-hf"
 
 
-tokenizer = AutoTokenizer.from_pretrained(hf_model_repo, use_fast=True)
+tokenizer = AutoTokenizer.from_pretrained(hf_model_repo, use_fast=True, token=token)
 
 quantizaton_ind = True
 
@@ -37,8 +45,10 @@ if quantizaton_ind:
     #  quantization_config=quantization_config, device_map='auto')
 
     # Load the model from HF
-    model = AutoModelForCausalLM.from_pretrained(hf_model_repo_quant, torch_dtype=torch.float16, device_map="auto")
-                                                 # load_in_4bit=True,
+    model = AutoModelForCausalLM.from_pretrained(hf_model_repo_quant, token=token)
+                                                # torch_dtype = torch.float16,
+                                                # device_map = "auto",
+                                                # load_in_4bit=True,
                                                  # bnb_4bit_quant_type="nf4",
                                                  # bnb_4bit_compute_dtype=torch.float16
 
@@ -46,9 +56,10 @@ else:
     model = AutoModelForCausalLM.from_pretrained(
         hf_model_repo,
         device_map='auto',
-        torch_dtype=torch.float32
+        torch_dtype=torch.float32,
+        token=token
     )
-model.to('cuda')
+# model.to('cuda')
 print("Load model time: ", -timeStart + time.time())
 
 # from transformers import pipeline
