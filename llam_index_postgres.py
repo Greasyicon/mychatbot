@@ -87,11 +87,11 @@ documents = SimpleDirectoryReader(
     f"{os.getcwd()}\data"
 ).load_data()
 # print(documents)
-table_schema_objs.append(documents)
+# table_schema_objs.append({'table_name':documents})
 # We dump the table schema information into a vector index.
 # The vector index is stored within the context builder for future use.
 obj_index = ObjectIndex.from_objects(table_schema_objs, table_node_mapping, VectorStoreIndex,)
-# index = VectorStoreIndex.from_documents(documents)#, service_context=service_context)
+index = VectorStoreIndex.from_documents(documents)#, service_context=service_context)
 
 # query_engine = index.as_query_engine()
 ## Persist the index to disk
@@ -102,6 +102,37 @@ obj_index = ObjectIndex.from_objects(table_schema_objs, table_node_mapping, Vect
 # ObjectRetriever: A retriever that retrieves a set of query engine tools.
 query_engine = SQLTableRetrieverQueryEngine(
     sql_database, obj_index.as_retriever(similarity_top_k=2), service_context=service_context,)
+
+class CompositeQueryEngine:
+    def __init__(self, sql_engine, pdf_engine):
+        self.sql_engine = sql_engine
+        self.pdf_engine = pdf_engine
+
+    def composite_query(self, query_str):
+        # Example heuristic: If the query contains "SELECT", use SQL engine
+        if "SELECT" in query_str.upper():
+            return self.sql_engine.query(query_str)
+        # Otherwise, use the PDF engine
+        else:
+            return self.pdf_engine.query(query_str)
+
+    def unified_query(self, query_str):
+        try:
+            sql_response = self.sql_engine.query(query_str)
+            doc_response = self.pdf_engine.query(query_str)
+
+            # Combine results as desired. This is a simple example that concatenates the responses.
+            # combined_response = {
+            #     'sql_response': sql_response,
+            #     'doc_response': doc_response,
+            # }
+            combined_response = f"{sql_response} \n {doc_response}"
+            return combined_response
+
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return None
+
 
 print("\n==============================================================================")
 print("Entering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")
@@ -115,6 +146,9 @@ while(True):
     import time
     timeStart = time.time()
     try:
+        # composite_engine = CompositeQueryEngine(query_engine, index.as_query_engine())
+        # response = composite_engine.composite_query(input_str)
+        # response = composite_engine.unified_query(input_str)
         response = query_engine.query(input_str)
         print("\nMayaAI: ", response)
         print(" \nMetadata Info:")
