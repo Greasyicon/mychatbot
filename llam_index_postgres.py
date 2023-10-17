@@ -17,6 +17,33 @@ import torch
 from llama_index import VectorStoreIndex, SimpleDirectoryReader, ServiceContext, set_global_service_context
 from llama_index.prompts import PromptTemplate
 from llama_index.llms import HuggingFaceLLM
+from llama_index.indices.struct_store import SQLTableRetrieverQueryEngine
+from llama_index.objects import SQLTableNodeMapping, ObjectIndex, SQLTableSchema
+from llama_index import SQLDatabase
+
+# Get structured data
+# Connect to Postgres Database
+# Read blog: https://www.dataherald.com/blog/how-to-connect-llm-to-sql-database-with-llamaindex
+from sqlalchemy import create_engine, MetaData
+username = 'llama'
+password = 'llama'
+host = 'localhost'
+port = '5432'
+mydatabase = 'llama'
+schema = 'public'
+engine = create_engine(f"postgresql+psycopg2://{username}:{password}@{host}:{port}/{mydatabase}",
+                       connect_args={'options': '-csearch_path={}'.format(schema)}, echo=False)
+
+#load all table definitions
+metadata_obj = MetaData()
+metadata_obj.reflect(engine)
+sql_database = SQLDatabase(engine)
+table_node_mapping = SQLTableNodeMapping(sql_database)
+table_schema_objs = []
+for table_name in metadata_obj.tables.keys():
+    table_schema_objs.append(SQLTableSchema(table_name=table_name))
+# We dump the table schema information into a vector index. The vector index is stored within the context builder for future use.
+# obj_index = ObjectIndex.from_objects(    table_schema_objs,    table_node_mapping,    VectorStoreIndex,)
 
 # To load a specific model, specify the model name:
 hf_model_repo_quant = "TheBloke/Llama-2-7b-Chat-GPTQ" # "TheBloke/Llama-2-13B-GPTQ" #
