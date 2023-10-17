@@ -21,31 +21,6 @@ from llama_index.indices.struct_store import SQLTableRetrieverQueryEngine
 from llama_index.objects import SQLTableNodeMapping, ObjectIndex, SQLTableSchema
 from llama_index import SQLDatabase
 
-# Get structured data
-# Connect to Postgres Database
-# Read blog: https://www.dataherald.com/blog/how-to-connect-llm-to-sql-database-with-llamaindex
-from sqlalchemy import create_engine, MetaData
-username = 'llama'
-password = 'llama'
-host = 'localhost'
-port = '5432'
-mydatabase = 'llama'
-schema = 'public'
-engine = create_engine(f"postgresql+psycopg2://{username}:{password}@{host}:{port}/{mydatabase}",
-                       connect_args={'options': '-csearch_path={}'.format(schema)}, echo=False)
-
-#load all table definitions
-metadata_obj = MetaData()
-metadata_obj.reflect(engine)
-sql_database = SQLDatabase(engine)
-table_node_mapping = SQLTableNodeMapping(sql_database)
-table_schema_objs = []
-for table_name in metadata_obj.tables.keys():
-    table_schema_objs.append(SQLTableSchema(table_name=table_name))
-# We dump the table schema information into a vector index.
-# The vector index is stored within the context builder for future use.
-obj_index = ObjectIndex.from_objects(table_schema_objs, table_node_mapping, VectorStoreIndex,)
-
 # To load a specific model, specify the model name:
 hf_model_repo_quant = "TheBloke/Llama-2-7b-Chat-GPTQ" # "TheBloke/Llama-2-13B-GPTQ" #
 hf_model_repo = "meta-llama/Llama-2-7b-chat-hf"
@@ -78,20 +53,46 @@ llm = HuggingFaceLLM(
     model_kwargs={"torch_dtype": torch.float16, "token":token}, #, "load_in_8bit": True
 )
 
-dir = os.getcwd()
-# print(dir)
-# load documents
-documents = SimpleDirectoryReader(
-    f"{dir}\data"
-).load_data()
-# print(documents)
-
 service_context = ServiceContext.from_defaults(
     llm=llm, embed_model="local:BAAI/bge-small-en"
 )
 set_global_service_context(service_context)
 
+# Get structured data
+# Connect to Postgres Database
+# Read blog: https://www.dataherald.com/blog/how-to-connect-llm-to-sql-database-with-llamaindex
+from sqlalchemy import create_engine, MetaData
+username = 'llama'
+password = 'llama'
+host = 'localhost'
+port = '5432'
+mydatabase = 'llama'
+schema = 'public'
+engine = create_engine(f"postgresql+psycopg2://{username}:{password}@{host}:{port}/{mydatabase}",
+                       connect_args={'options': '-csearch_path={}'.format(schema)}, echo=False)
+
+#load all table definitions
+metadata_obj = MetaData()
+metadata_obj.reflect(engine)
+sql_database = SQLDatabase(engine)
+table_node_mapping = SQLTableNodeMapping(sql_database)
+table_schema_objs = []
+for table_name in metadata_obj.tables.keys():
+    table_schema_objs.append(SQLTableSchema(table_name=table_name))
+
+# Add Unstructured Data  -  context
+# print(dir)
+# load documents
+documents = SimpleDirectoryReader(
+    f"{os.getcwd()}\data"
+).load_data()
+# print(documents)
+table_schema_objs.append(documents)
+# We dump the table schema information into a vector index.
+# The vector index is stored within the context builder for future use.
+obj_index = ObjectIndex.from_objects(table_schema_objs, table_node_mapping, VectorStoreIndex,)
 # index = VectorStoreIndex.from_documents(documents)#, service_context=service_context)
+
 # query_engine = index.as_query_engine()
 ## Persist the index to disk
 ## index.storage_context.persist(persist_dir="index_storage")
@@ -100,7 +101,7 @@ set_global_service_context(service_context)
 # Note that we pass in the ObjectRetriever so that we can dynamically retrieve the table during query-time.
 # ObjectRetriever: A retriever that retrieves a set of query engine tools.
 query_engine = SQLTableRetrieverQueryEngine(
-    sql_database, obj_index.as_retriever(similarity_top_k=1), service_context=service_context,)
+    sql_database, obj_index.as_retriever(similarity_top_k=2), service_context=service_context,)
 
 print("\n==============================================================================")
 print("Entering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")
