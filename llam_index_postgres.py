@@ -10,7 +10,7 @@ if token:
     # Use the token for your operations
     print(f"\n-----______________--------- Hugging Face Token is set\n") #
 else:
-    print("\nWARNING ---- ______ -----Hugging Face Token not set or not found! May be Required to Download Model from Hugging Face hub.\n")
+    print("\nWARNING ---- ______ ----- Hugging Face Token not set or not found! May be Required to Download Model from Hugging Face hub.\n")
 # from IPython.display import Markdown, display
 
 import torch
@@ -102,10 +102,10 @@ set_global_service_context(service_context)
 query_engine = SQLTableRetrieverQueryEngine(
     sql_database, obj_index.as_retriever(similarity_top_k=1), service_context=service_context,)
 
-
-
+print("\n==============================================================================")
+print("Entering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")
+print("==============================================================================")
 while(True):
-    print("\nEntering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")
     input_str = input('\nHow Can I help you?: ')
     # input_token_length = input('Enter length: ')
 
@@ -116,7 +116,7 @@ while(True):
     try:
         response = query_engine.query(input_str)
         print("\nMayaAI: ", response)
-        print("     Metadata Info:")
+        print(" \nMetadata Info:")
         print("     MayaSQL:", response.metadata['sql_query'])
         print("     MayaSQLResult:", response.metadata['result'])
     except Exception as e:
