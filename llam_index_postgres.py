@@ -8,9 +8,9 @@ os.environ['CURL_CA_BUNDLE'] = ''
 token = os.environ.get('HUGGINGFACE_TOKEN')
 if token:
     # Use the token for your operations
-    print(f"-----______________--------- Hugging Face Token is set") #
+    print(f"\n-----______________--------- Hugging Face Token is set\n") #
 else:
-    print("WARNING ---- ______ -----Hugging Face Token not set or not found! May be Required to Download Model from Hugging Face hub.")
+    print("\nWARNING ---- ______ -----Hugging Face Token not set or not found! May be Required to Download Model from Hugging Face hub.\n")
 # from IPython.display import Markdown, display
 
 import torch
@@ -42,8 +42,9 @@ table_node_mapping = SQLTableNodeMapping(sql_database)
 table_schema_objs = []
 for table_name in metadata_obj.tables.keys():
     table_schema_objs.append(SQLTableSchema(table_name=table_name))
-# We dump the table schema information into a vector index. The vector index is stored within the context builder for future use.
-# obj_index = ObjectIndex.from_objects(    table_schema_objs,    table_node_mapping,    VectorStoreIndex,)
+# We dump the table schema information into a vector index.
+# The vector index is stored within the context builder for future use.
+obj_index = ObjectIndex.from_objects(table_schema_objs, table_node_mapping, VectorStoreIndex,)
 
 # To load a specific model, specify the model name:
 hf_model_repo_quant = "TheBloke/Llama-2-7b-Chat-GPTQ" # "TheBloke/Llama-2-13B-GPTQ" #
@@ -52,6 +53,8 @@ hf_model_repo = "meta-llama/Llama-2-7b-chat-hf"
 SYSTEM_PROMPT = """You are an AI assistant that answers questions in a friendly manner, based on the given source documents. 
 Here are some rules you always follow:
 - Generate human readable output, avoid creating output with gibberish text.
+- You are amazing at understanding the SQL database structure and always create the query (no matter how complicated 
+the query is) which helps answering the user question.
 - Generate only the requested output, don't include any other language before or after the requested output.
 - Never say thank you, that you are happy to help, that you are an AI agent, etc. Just answer directly.
 - Generate professional language typically used in business documents in North America.
@@ -81,29 +84,42 @@ dir = os.getcwd()
 documents = SimpleDirectoryReader(
     f"{dir}\data"
 ).load_data()
-print(documents)
+# print(documents)
 
 service_context = ServiceContext.from_defaults(
     llm=llm, embed_model="local:BAAI/bge-small-en"
 )
 set_global_service_context(service_context)
 
-index = VectorStoreIndex.from_documents(documents)#, service_context=service_context)
-# Persist the index to disk
-# index.storage_context.persist(persist_dir="index_storage")
+# index = VectorStoreIndex.from_documents(documents)#, service_context=service_context)
+# query_engine = index.as_query_engine()
+## Persist the index to disk
+## index.storage_context.persist(persist_dir="index_storage")
 
-query_engine = index.as_query_engine()
+# We construct a SQLTableRetrieverQueryEngine.
+# Note that we pass in the ObjectRetriever so that we can dynamically retrieve the table during query-time.
+# ObjectRetriever: A retriever that retrieves a set of query engine tools.
+query_engine = SQLTableRetrieverQueryEngine(
+    sql_database, obj_index.as_retriever(similarity_top_k=1), service_context=service_context,)
+
+
 
 while(True):
-    input_str = input('Enter: ')
+    print("\nEntering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")
+    input_str = input('\nHow Can I help you?: ')
     # input_token_length = input('Enter length: ')
 
-    if(input_str == 'exit'):
+    if(input_str.lower() == 'exit'):
         break
     import time
     timeStart = time.time()
+    try:
+        response = query_engine.query(input_str)
+        print("\nMayaAI: ", response)
+        print("     Metadata Info:")
+        print("     MayaSQL:", response.metadata['sql_query'])
+        print("     MayaSQLResult:", response.metadata['result'])
+    except Exception as e:
+        print(f"ERROR --- SQL {e} Please modify the question so that question is only related to one table.")
 
-    response = query_engine.query(input_str)
-    print(response)
-
-    print("Time taken: ", -timeStart + time.time())
+    print("     Time taken: ", -timeStart + time.time())
