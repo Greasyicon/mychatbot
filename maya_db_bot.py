@@ -12,7 +12,6 @@ from llama_index.indices.struct_store import SQLTableRetrieverQueryEngine
 from llama_index.objects import SQLTableNodeMapping, ObjectIndex, SQLTableSchema
 from llama_index import SQLDatabase
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Text, inspect
-from flask import Flask, render_template, request, jsonify
 
 
 class CompositeQueryEngine:
@@ -114,7 +113,7 @@ def chatbot_response(user_input):
     return query_engine.query(user_input)
 def run_web():
     # A simple Flask web server (you'd need to install Flask: pip install flask)
-    from flask import Flask, request, jsonify
+    from flask import Flask, request, jsonify, render_template
     app = Flask(__name__)
 
     @app.route('/')
