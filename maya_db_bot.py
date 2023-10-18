@@ -12,6 +12,7 @@ from llama_index.indices.struct_store import SQLTableRetrieverQueryEngine
 from llama_index.objects import SQLTableNodeMapping, ObjectIndex, SQLTableSchema
 from llama_index import SQLDatabase
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Text, inspect
+from flask import Flask, render_template, request, jsonify
 
 
 class CompositeQueryEngine:
@@ -116,6 +117,9 @@ def run_web():
     from flask import Flask, request, jsonify
     app = Flask(__name__)
 
+    @app.route('/')
+    def index():
+        return render_template('index.html')
     @app.route('/chat', methods=['POST'])
     def chat_endpoint():
         user_input = request.json['message']
