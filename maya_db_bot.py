@@ -1,7 +1,8 @@
-import logging
+import logging, time
 import sys, os
 import pandas as pd
 import myllm, Config
+
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
@@ -11,6 +12,7 @@ from llama_index.indices.struct_store import SQLTableRetrieverQueryEngine
 from llama_index.objects import SQLTableNodeMapping, ObjectIndex, SQLTableSchema
 from llama_index import SQLDatabase
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Text, inspect
+
 
 class CompositeQueryEngine:
     def __init__(self, sql_engine, pdf_engine):
@@ -42,15 +44,17 @@ class CompositeQueryEngine:
             print(f"ERROR: {e}")
             return None
 
+
 def get_db_con(database, host, password, port, schema, username):
     # Connect to the database
     engine = create_engine(f"postgresql+psycopg2://{username}:{password}@{host}:{port}/{database}",
                            connect_args={'options': f'-csearch_path={schema}'}, echo=False)
     return engine
 
-#Setup Database for Documents
-def setup_db_for_documents(engine):
 
+
+# Setup Database for Documents
+def setup_db_for_documents(engine):
     # Check if the documents table already exists, if not, create it
     inspector = inspect(engine)
     if "documents" not in inspector.get_table_names():
@@ -62,7 +66,8 @@ def setup_db_for_documents(engine):
 
     return engine
 
-#Insert PDF Contents into Database:
+
+# Insert PDF Contents into Database:
 def insert_pdf_content_to_db(engine, document_directory):
     documents = SimpleDirectoryReader(
         document_directory
@@ -87,6 +92,7 @@ def insert_pdf_content_to_db(engine, document_directory):
     # Write the DataFrame to the database
     df.to_sql('documents', con=engine, if_exists='append', index=False)
 
+
 def query_documents(engine, query_str, service_context, metadata_obj):
     # Reflect the database changes
     metadata_obj.reflect(engine)
@@ -102,8 +108,29 @@ def query_documents(engine, query_str, service_context, metadata_obj):
 
     return sql_query_engine.query(query_str)
 
-if __name__ == '__main__':
+def chatbot_response(user_input):
 
+    return query_engine.query(user_input)
+def run_web():
+    # A simple Flask web server (you'd need to install Flask: pip install flask)
+    from flask import Flask, request, jsonify
+    app = Flask(__name__)
+
+    @app.route('/chat', methods=['POST'])
+    def chat_endpoint():
+        user_input = request.json['message']
+        response = chatbot_response(user_input)
+        return jsonify({'response': response})
+
+    app.run(debug=True)
+
+
+def run_local():
+    myllm.maya_ai(query_engine)
+
+
+
+if __name__ == '__main__':
     # Start Indexing data
     service_context = ServiceContext.from_defaults(
         llm=myllm.my_llm(), embed_model="local:BAAI/bge-small-en"
@@ -121,7 +148,7 @@ if __name__ == '__main__':
     # insert the documents into table
     insert_pdf_content_to_db(engine, document_directory=f"{os.getcwd()}\data")
 
-    #load all table definitions
+    # load all table definitions
     metadata_obj = MetaData()
     metadata_obj.reflect(engine)
     sql_database = SQLDatabase(engine)
@@ -138,7 +165,7 @@ if __name__ == '__main__':
 
     # We dump the table schema information into a vector index.
     # The vector index is stored within the context builder for future use.
-    obj_index = ObjectIndex.from_objects(table_schema_objs, table_node_mapping, VectorStoreIndex,)
+    obj_index = ObjectIndex.from_objects(table_schema_objs, table_node_mapping, VectorStoreIndex, )
     # index = VectorStoreIndex.from_documents(documents)#, service_context=service_context)
 
     # query_engine = index.as_query_engine()
@@ -149,6 +176,14 @@ if __name__ == '__main__':
     # Note that we pass in the ObjectRetriever so that we can dynamically retrieve the table during query-time.
     # ObjectRetriever: A retriever that retrieves a set of query engine tools.
     query_engine = SQLTableRetrieverQueryEngine(
-        sql_database, obj_index.as_retriever(similarity_top_k=2), service_context=service_context,)
+        sql_database, obj_index.as_retriever(similarity_top_k=2), service_context=service_context, )
 
-    myllm.maya_ai(query_engine)
+
+    mode = input("\n\nEnter 'web' to run on Flask or 'local' to run locally: ").strip().lower()
+
+    if mode == "web":
+        run_web()
+    elif mode == "local":
+        run_local()
+    else:
+        print("Invalid mode. Exiting.")

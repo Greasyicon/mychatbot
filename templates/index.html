@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <title>Maya AI Bot</title>
+</head>
+<body>
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h3>Maya AI Bot</h3>
+                </div>
+                <div class="card-body">
+                    <div class="input-group mb-3">
+                        <input type="text" id="userInput" class="form-control" placeholder="Ask something...">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" onclick="askBot()">Ask</button>
+                        </div>
+                    </div>
+                    <div id="response" class="alert alert-info" style="display: none;"></div>
+                    <div id="metadata" class="alert alert-secondary" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function askBot() {
+        const userInput = document.getElementById('userInput').value;
+        fetch('/ask', {
+            method: 'POST',
+            body: new URLSearchParams({'user_input': userInput}),
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.error) {
+                document.getElementById('response').style.display = 'block';
+                document.getElementById('response').innerText = data.error;
+            } else {
+                document.getElementById('response').style.display = 'block';
+                document.getElementById('response').innerText = 'MayaAI: ' + data.response;
+                document.getElementById('metadata').style.display = 'block';
+                document.getElementById('metadata').innerText = 'Metadata: ' + JSON.stringify(data.metadata);
+            }
+        });
+    }
+</script>
+</body>
+</html>

@@ -142,7 +142,7 @@ print("Load model time: ", -timeStart + time.time())
 #
 while(True):
     input_str = input('Enter: ')
-    input_token_length = input('Enter length: ')
+    input_token_length = input('Enter output length expected (more length -> more latency): ')
 
     if(input_str == 'exit'):
         break
