@@ -1,18 +1,19 @@
 # maya_chatbot.py
 
-from Config import hf_model_repo, hf_model_repo_quant, token
+import Config
 import time
 import myllm
 from llama_index.llms.base import ChatMessage
 
 def chatbot_response(user_input):
     messages = [ChatMessage(role="user", content=user_input)]
-    return myllm.my_llm().chat(messages)
+    return llm.chat(messages)
+
 def run_local():
     # Local interaction with the chatbot
     while True:
         timeStart = time.time()
-        user_input = input("You: ")
+        user_input = input("Enter: ")
         if user_input.lower() in ['exit', 'quit']:
             break
         response = chatbot_response(user_input)
@@ -37,6 +38,8 @@ def run_web():
 
 
 if __name__ == "__main__":
+
+    llm = myllm.my_llm()
 
     mode = input("\n\nEnter 'web' to run on Flask or 'local' to run locally: ").strip().lower()
 

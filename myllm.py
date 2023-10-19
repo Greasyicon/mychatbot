@@ -21,11 +21,11 @@ def my_llm():
     )
     llm = HuggingFaceLLM(
         context_window=4096,
-        max_new_tokens=500,
+        max_new_tokens=100,
         # generate_kwargs={"temperature": 0.0, "do_sample": True},
         query_wrapper_prompt=query_wrapper_prompt,
-        tokenizer_name=Config.hf_model_repo_quant,
-        model_name=Config.hf_model_repo_quant,
+        tokenizer_name=Config.hf_model_repo,
+        model_name=Config.hf_model_repo,
         device_map="auto",
         # change these settings below depending on your GPU
         model_kwargs={"torch_dtype": torch.float16, "token": Config.token},  # , "load_in_8bit": True
