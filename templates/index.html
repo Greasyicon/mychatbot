@@ -1,60 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <title>Maya AI Bot</title>
+    <title>Maya AI Chatbot</title>
+    <link rel="stylesheet" href="static/style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
+
 <body>
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card">
-                <div class="card-header text-center">
-                    <h3>Maya AI Bot</h3>
-                </div>
-                <div class="card-body">
-                    <div class="input-group mb-3">
-                        <input type="text" id="userInput" class="form-control" placeholder="Ask something...">
-                        <div class="input-group-append">
-                            <button class="btn btn-primary" onclick="askBot()">Ask</button>
-                        </div>
-                    </div>
-                    <div id="response" class="alert alert-info" style="display: none;"></div>
-                    <div id="metadata" class="alert alert-secondary" style="display: none;"></div>
-                </div>
-            </div>
+    <div class="container">
+        <h1>Maya AI Chatbot</h1>
+        <div class="mode-selector">
+            <button id="chatbotMode" class="active">Chatbot Mode</button>
+            <button id="docbotMode">Docbot Mode</button>
+        </div>
+        <div class="chat-interface">
+            <textarea id="userInput" placeholder="Enter your query here, Sire..."></textarea>
+            <button id="submit">Ask</button>
+            <div id="response"></div>
         </div>
     </div>
-</div>
 
-<script>
-    function askBot() {
-        const userInput = document.getElementById('userInput').value;
-        fetch('/ask', {
-            method: 'POST',
-            body: new URLSearchParams({'user_input': userInput}),
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if(data.error) {
-                document.getElementById('response').style.display = 'block';
-                document.getElementById('response').innerText = data.error;
-            } else {
-                document.getElementById('response').style.display = 'block';
-                document.getElementById('response').innerText = 'Maya Chatbot assistant: ' + data.response;
-                document.getElementById('metadata').style.display = 'block';
-                document.getElementById('metadata').innerText = 'Metadata: ' + JSON.stringify(data.metadata);
-            }
+    <script>
+        let mode = 'chatbot'; // default mode
+
+        // Mode selector logic
+        $('#chatbotMode').click(function() {
+            mode = 'chatbot';
+            $('.mode-selector button').removeClass('active');
+            $(this).addClass('active');
         });
-    }
-</script>
+
+        $('#docbotMode').click(function() {
+            mode = 'docbot';
+            $('.mode-selector button').removeClass('active');
+            $(this).addClass('active');
+        });
+
+        // Form submission logic
+        $('#submit').click(function() {
+            const message = $('#userInput').val();
+            $.ajax({
+                url: '/ask',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ message: message, mode: mode }),
+                dataType: 'json',
+                success: function(data) {
+                    $('#response').text(data.response);
+                }
+            });
+        });
+    </script>
 </body>
+
 </html>
