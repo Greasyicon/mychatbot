@@ -11,13 +11,19 @@ def chatbot_response(user_input):
 
 def run_local():
     # Local interaction with the chatbot
-    while True:
-        timeStart = time.time()
-        user_input = input("Enter: ")
-        if user_input.lower() in ['exit', 'quit']:
+    while (True):
+        user_input = input(f"{Config.bcolors.OKCYAN}Enter your query here, Sire: {Config.bcolors.ENDC}")
+        # input_token_length = input('Enter output length expected (more length -> more response time): ')
+
+        if (user_input == 'exit'):
             break
+
+        timeStart = time.time()
+
         response = chatbot_response(user_input)
-        print(f"Maya Chatbot {response}")
+
+        print(f"{Config.bcolors.OKBLUE}Maya Chatbot {response}{Config.bcolors.ENDC}")
+
         print("Time taken: ", -timeStart + time.time())
 
 def run_web():

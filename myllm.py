@@ -37,10 +37,10 @@ def maya_ai(query_engine):
     print("Entering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")
     print("==============================================================================")
     while (True):
-        input_str = input('\nHow Can I help you?: ')
+        user_input = input(f"\n{Config.bcolors.OKCYAN}Enter your query here, Sire: {Config.bcolors.ENDC}")
         # input_token_length = input('Enter length: ')
 
-        if (input_str.lower() == 'exit'):
+        if (user_input.lower() == 'exit'):
             break
         import time
         timeStart = time.time()
@@ -48,8 +48,9 @@ def maya_ai(query_engine):
             # composite_engine = CompositeQueryEngine(query_engine, index.as_query_engine())
             # response = composite_engine.composite_query(input_str)
             # response = composite_engine.unified_query(input_str)
-            response = query_engine.query(input_str)
-            print("\nMayaAI: ", response)
+            response = query_engine.query(user_input)
+
+            print(f"\n{Config.bcolors.OKBLUE}Maya Chatbot assistant: {response}{Config.bcolors.ENDC}")
             try:
                 print(" \nMetadata Info:")
                 print("     MayaSQL:", response.metadata['sql_query'])

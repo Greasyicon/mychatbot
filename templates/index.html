@@ -49,7 +49,7 @@
                 document.getElementById('response').innerText = data.error;
             } else {
                 document.getElementById('response').style.display = 'block';
-                document.getElementById('response').innerText = 'MayaAI: ' + data.response;
+                document.getElementById('response').innerText = 'Maya Chatbot assistant: ' + data.response;
                 document.getElementById('metadata').style.display = 'block';
                 document.getElementById('metadata').innerText = 'Metadata: ' + JSON.stringify(data.metadata);
             }

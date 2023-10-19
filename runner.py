@@ -1,5 +1,5 @@
 import maya_chatbot
-import maya_pdf_bot
+import maya_doc_bot
 import maya_db_bot
 
 def main():

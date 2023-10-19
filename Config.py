@@ -8,6 +8,7 @@ else:
     print("WARNING ---- ______ -----Hugging Face Token not set or not found! "
           "May be Required to Download Model from Hugging Face hub.")
 
+# colors for print
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'

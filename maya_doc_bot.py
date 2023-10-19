@@ -13,7 +13,7 @@ def chatbot_response(user_input):
     return query_engine.query(user_input)
 def run_web():
     # A simple Flask web server (you'd need to install Flask: pip install flask)
-    from flask import Flask, request, jsonify
+
     app = Flask(__name__)
 
     @app.route('/')
