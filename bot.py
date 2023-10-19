@@ -75,13 +75,18 @@ llm = HuggingFaceLLM(
 )
 
 # chatbot mode
+bot_modes = ['chatbot', 'docbot']
 bot_mode_default = 'chatbot' #'docbot'
+
 bot_mode = input('Enter the bot mode (chtabot or docbot): ')
-if bot_mode not in ('chatbot', 'docbot'):
+if bot_mode not in bot_modes:
     bot_mode = bot_mode_default
     print(f"Bot Model not selected, so using default bot model {bot_mode_default}")
+
 ########################################## CHAT BOT #######################################################
-if (bot_mode=='chatbot') | (bot_mode!='docbot'):
+
+## Do General Q&A
+if (bot_mode=='chatbot'):
     print("\n==============================================================================")
     print("Entering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")
     print("==============================================================================")
@@ -105,6 +110,7 @@ if (bot_mode=='chatbot') | (bot_mode!='docbot'):
 
 
 ########################################## DOCUMENT BOT #######################################################
+
 ## Read documents and do Q&A!
 if bot_mode=='docbot':
     from llama_index import VectorStoreIndex, SimpleDirectoryReader, ServiceContext, set_global_service_context
