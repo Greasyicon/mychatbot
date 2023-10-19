@@ -1,12 +1,5 @@
 import os
 os.environ['CURL_CA_BUNDLE'] = ''
-token = os.environ.get('HUGGINGFACE_TOKEN')
-if token:
-    # Use the token for your operations
-    print(f"-----______________--------- Hugging Face Token is set") #
-else:
-    print("WARNING ---- ______ -----Hugging Face Token not set or not found! "
-          "May be Required to Download Model from Hugging Face hub.")
 
 # colors for print
 class bcolors:
@@ -19,6 +12,14 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+token = os.environ.get('HUGGINGFACE_TOKEN')
+if token:
+    # Use the token for your operations
+    print(f"\n-----______________--------- Hugging Face Token is set") #
+else:
+    print("\nWARNING ---- ______ -----Hugging Face Token not set or not found! "
+          "May be Required to Download Model from Hugging Face hub.")
 
 # To load a specific model, specify the model name:
 import torch

@@ -99,7 +99,6 @@ def run_web():
     def index():
         return render_template('index.html')
 
-
     @app.route('/ask', methods=['POST'])
     def ask():
         user_input = request.json['message']
@@ -119,95 +118,97 @@ def run_web():
     app.run(debug=True)
 
 
-if __name__ == '__main__':
+# to run on cuda the following code is needed!
+os.environ['CURL_CA_BUNDLE'] = ''
+
+token = os.environ.get('HUGGINGFACE_TOKEN')
+if token:
+    # Use the token for your operations
+    print(f"-----______________--------- Hugging Face Token is set") #
+else:
+    print("WARNING ---- ______ -----Hugging Face Token not set or not found! "
+          "May be Required to Download Model from Hugging Face hub.")
+
+# use the Quantized model is cuda is available
+if torch.cuda.is_available():
+    print("\nCuda is available! yay!")
+    cuda_ind = True
+    hf_model_repo = "TheBloke/Llama-2-7b-Chat-GPTQ" # "TheBloke/Llama-2-13B-GPTQ" #
+    t_dtype = torch.float16 # data type to float16 for quantized models
+else:
+    cuda_ind = False
+    hf_model_repo = "meta-llama/Llama-2-7b-chat-hf"#, "meta-llama/Llama-2-7b-hf", "meta-llama/Llama-2-13b-hf"
+    t_dtype = torch.float32 # data type to float32 or float16 for non-quantized models
+
+# Set the system prompt
+SYSTEM_PROMPT = """
+    You are Maya AI an AI assistant that answers questions in a friendly manner, based on the given source documents. 
+    Here are some rules you always follow:
+    - Your name is Maya AI. So always use Maya AI whenever you need to use your name.
+    - Generate human readable output, avoid creating output with gibberish text.
+    - Generate only the requested output, don't include any other language before or after the requested output.
+    - Never say thank you, that you are happy to help, that you are an AI agent, etc. Just answer directly.
+    - Generate professional language typically used in business documents in North America.
+    - Never generate offensive or foul language.
+    - Never repeat the question. Only generate the answer in a nice formatted manner.
+    - Answer all questions you can.
+    """
+query_wrapper_prompt = PromptTemplate(
+    "[INST]<<SYS>>\n" + SYSTEM_PROMPT + "<</SYS>>\n\n{query_str}[/INST] "
+)
+# Max output Tokens expected
+max_output_tokens = 100
+print(
+    f"Max Output Tokens is {max_output_tokens}. Increasing max output tokens will increase the model response time. ")
+
+# Set the Hugging Face pipeline
+llm = HuggingFaceLLM(
+    context_window=4096,
+    max_new_tokens=max_output_tokens,
+    # generate_kwargs={"temperature": 0.0, "do_sample": True},
+    query_wrapper_prompt=query_wrapper_prompt,
+    tokenizer_name=hf_model_repo,
+    model_name=hf_model_repo,
+    device_map="auto",
+    # change these settings below depending on your GPU
+    model_kwargs={"torch_dtype": t_dtype, "token": token},  # , "load_in_8bit": True
+)
+## Seeting Query Engine - Llama Index for reading docs
+from llama_index import VectorStoreIndex, SimpleDirectoryReader, ServiceContext, set_global_service_context
+
+print("Vectorizing and Indexing documents data. Patience!")
+# Get root directory
+dir = os.getcwd()
+# Read the documents from data folder in root dir
+# load documents
+documents = SimpleDirectoryReader(os.path.join(dir, "data")).load_data()
+# Set service context for indexing data
+service_context = ServiceContext.from_defaults(
+    llm=llm, embed_model="local:BAAI/bge-small-en")
+set_global_service_context(service_context)
+# Create index
+index = VectorStoreIndex.from_documents(documents)  # , service_context=service_context)
+# Persist the index to disk
+# index.storage_context.persist(persist_dir="index_storage")
+# Create an engine to query the document
+query_engine = index.as_query_engine()
+
+####### Web or Local Bot
+
+mode = input("\n\nEnter 'web' to run on Flask or 'local' to run locally: ").strip().lower()
+
+if mode == "web":
+    run_web()
+elif mode == "local":
+    run_local()
+else:
+    print("Invalid mode. Exiting.")
+
+print("\nMaya Chatbot assistant: Bye Dear!")
+
+# if __name__ == '__main__':
     # app.run(debug=True)
 
-    # to run on cuda the following code is needed!
-    os.environ['CURL_CA_BUNDLE'] = ''
-
-    token = os.environ.get('HUGGINGFACE_TOKEN')
-    if token:
-        # Use the token for your operations
-        print(f"-----______________--------- Hugging Face Token is set") #
-    else:
-        print("WARNING ---- ______ -----Hugging Face Token not set or not found! "
-              "May be Required to Download Model from Hugging Face hub.")
-
-    # use the Quantized model is cuda is available
-    if torch.cuda.is_available():
-        print("\nCuda is available! yay!")
-        cuda_ind = True
-        hf_model_repo = "TheBloke/Llama-2-7b-Chat-GPTQ" # "TheBloke/Llama-2-13B-GPTQ" #
-        t_dtype = torch.float16 # data type to float16 for quantized models
-    else:
-        cuda_ind = False
-        hf_model_repo = "meta-llama/Llama-2-7b-chat-hf"#, "meta-llama/Llama-2-7b-hf", "meta-llama/Llama-2-13b-hf"
-        t_dtype = torch.float32 # data type to float32 or float16 for non-quantized models
-
-    # Set the system prompt
-    SYSTEM_PROMPT = """
-        You are Maya AI an AI assistant that answers questions in a friendly manner, based on the given source documents. 
-        Here are some rules you always follow:
-        - Your name is Maya AI. So always use Maya AI whenever you need to use your name.
-        - Generate human readable output, avoid creating output with gibberish text.
-        - Generate only the requested output, don't include any other language before or after the requested output.
-        - Never say thank you, that you are happy to help, that you are an AI agent, etc. Just answer directly.
-        - Generate professional language typically used in business documents in North America.
-        - Never generate offensive or foul language.
-        - Never repeat the question. Only generate the answer in a nice formatted manner.
-        - Answer all questions you can.
-        """
-    query_wrapper_prompt = PromptTemplate(
-        "[INST]<<SYS>>\n" + SYSTEM_PROMPT + "<</SYS>>\n\n{query_str}[/INST] "
-    )
-    # Max output Tokens expected
-    max_output_tokens = 100
-    print(
-        f"Max Output Tokens is {max_output_tokens}. Increasing max output tokens will increase the model response time. ")
-
-    # Set the Hugging Face pipeline
-    llm = HuggingFaceLLM(
-        context_window=4096,
-        max_new_tokens=max_output_tokens,
-        # generate_kwargs={"temperature": 0.0, "do_sample": True},
-        query_wrapper_prompt=query_wrapper_prompt,
-        tokenizer_name=hf_model_repo,
-        model_name=hf_model_repo,
-        device_map="auto",
-        # change these settings below depending on your GPU
-        model_kwargs={"torch_dtype": t_dtype, "token": token},  # , "load_in_8bit": True
-    )
-    ## Seeting Query Engine - Llama Index for reading docs
-    from llama_index import VectorStoreIndex, SimpleDirectoryReader, ServiceContext, set_global_service_context
-
-    print("Vectorizing and Indexing documents data. Patience!")
-    # Get root directory
-    dir = os.getcwd()
-    # Read the documents from data folder in root dir
-    # load documents
-    documents = SimpleDirectoryReader(os.path.join(dir, "data")).load_data()
-    # Set service context for indexing data
-    service_context = ServiceContext.from_defaults(
-        llm=llm, embed_model="local:BAAI/bge-small-en")
-    set_global_service_context(service_context)
-    # Create index
-    index = VectorStoreIndex.from_documents(documents)  # , service_context=service_context)
-    # Persist the index to disk
-    # index.storage_context.persist(persist_dir="index_storage")
-    # Create an engine to query the document
-    query_engine = index.as_query_engine()
-
-    ####### Web or Local Bot
-    mode = input("\n\nEnter 'web' to run on Flask or 'local' to run locally: ").strip().lower()
-
-    if mode == "web":
-        run_web()
-    elif mode == "local":
-        run_local()
-    else:
-        print("Invalid mode. Exiting.")
-
-    print("\nMaya Chatbot assistant: Bye Dear!")
 
 
 ######################## ALL DONE ############################################
