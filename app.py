@@ -20,48 +20,54 @@ from llama_index.llms.base import ChatMessage
 
 
 ########################################## CHAT BOT #######################################################
-def chat_bot(user_input=None):
-    print("\n==============================================================================")
-    print("Entering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")
-    print("==============================================================================")
-    while (True):
-        if user_input is None:
-            user_input = input(f"{bcolors.OKCYAN}Enter your query here, Sire: {bcolors.ENDC}")
-        # input_token_length = input('Enter output length expected (more length -> more response time): ')
 
-        if (user_input == 'exit'):
-            break
-
-        timeStart = time.time()
-
-        # prepare message for HF
+def chat_bot(user_input=None, is_web_mode=False):
+    if is_web_mode:
         messages = [ChatMessage(role="user", content=user_input)]
-        output_str_llama_index = llm.chat(messages)
+        return llm.chat(messages)
+    else:
+        print("\n==============================================================================")
+        print("Entering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")
+        print("==============================================================================")
+        while True:
+            if user_input is None:
+                user_input = input(f"{bcolors.OKCYAN}Enter your query here, Sire: {bcolors.ENDC}")
 
-        print(f"{bcolors.OKBLUE}Maya Chatbot {output_str_llama_index}{bcolors.ENDC}")
+            if user_input == 'exit':
+                break
 
-        print("Time taken: ", -timeStart + time.time())
+            timeStart = time.time()
+            messages = [ChatMessage(role="user", content=user_input)]
+            output_str_llama_index = llm.chat(messages)
+            print(f"{bcolors.OKBLUE}Maya Chatbot {output_str_llama_index}{bcolors.ENDC}")
+            print("Time taken: ", -timeStart + time.time())
 
+            user_input = None
 
 ########################################## DOCUMENT BOT #######################################################
-def doc_bot():
 
-    print("\n==============================================================================")
-    print("Entering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")
-    print("==============================================================================")
-    while (True):
-        user_input = input(f"\n{bcolors.OKCYAN}Enter your query here, Sire: {bcolors.ENDC}")
-        # input_token_length = input('Enter length: ')
 
-        if (user_input.lower() == 'exit'):
-            break
+def doc_bot(user_input=None, is_web_mode=False):
+    if is_web_mode:
+        return query_engine.query(user_input)
+    else:
+        print("\n==============================================================================")
+        print("Entering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")
+        print("==============================================================================")
+        while True:
+            if user_input is None:
+                user_input = input(f"{bcolors.OKCYAN}Enter your query here, Sire: {bcolors.ENDC}")
 
-        timeStart = time.time()
+            if user_input.lower() == 'exit':
+                break
 
-        response = query_engine.query(user_input)
-        print(f"\n{bcolors.OKBLUE}Maya Chatbot assistant: {response}{bcolors.ENDC}")
+            timeStart = time.time()
+            response = query_engine.query(user_input)
+            print(f"\n{bcolors.OKBLUE}Maya Chatbot assistant: {response}{bcolors.ENDC}")
+            print("Time taken: ", -timeStart + time.time())
 
-        print("Time taken: ", -timeStart + time.time())
+            user_input = None
+
 
 def run_local():
     ################################### Local Bot Mode ########################################################
@@ -101,10 +107,10 @@ def run_web():
 
         if mode == 'chatbot':
             # Call your chatbot function here
-            response = chat_bot(user_input)
+            response = chat_bot(user_input, is_web_mode=True)
         elif mode == 'docbot':
             # Call your docbot function here
-            response = doc_bot(user_input)
+            response = doc_bot(user_input, is_web_mode=True)
         else:
             response = "Error: Invalid mode"
 
