@@ -24,7 +24,7 @@ from llama_index.llms.base import ChatMessage
 def chat_bot(user_input=None, is_web_mode=False):
     if is_web_mode:
         messages = [ChatMessage(role="user", content=user_input)]
-        return llm.chat(messages).to_string()
+        return llm.chat(messages).message.content
     else:
         print("\n==============================================================================")
         print("Entering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")
@@ -49,7 +49,7 @@ def chat_bot(user_input=None, is_web_mode=False):
 
 def doc_bot(user_input=None, is_web_mode=False):
     if is_web_mode:
-        return query_engine.query(user_input)
+        return query_engine.query(user_input).message.content
     else:
         print("\n==============================================================================")
         print("Entering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")
