@@ -24,7 +24,7 @@ from llama_index.llms.base import ChatMessage
 def chat_bot(user_input=None, is_web_mode=False):
     if is_web_mode:
         messages = [ChatMessage(role="user", content=user_input)]
-        return llm.chat(messages)
+        return llm.chat(messages).to_string()
     else:
         print("\n==============================================================================")
         print("Entering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")
@@ -113,7 +113,7 @@ def run_web():
             response = doc_bot(user_input, is_web_mode=True)
         else:
             response = "Error: Invalid mode"
-
+        print(response)
         return jsonify({'response': response})
 
     app.run(debug=False)
