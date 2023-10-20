@@ -35,8 +35,31 @@ def run_web():
 def run_local():
     myllm.maya_ai(query_engine)
 
-if __name__ == '__main__':
+def read_confluence():
+    from llama_hub.confluence import ConfluenceReader
 
+    token = {
+        "access_token": "ATOAdX1C386QZRWLw46E_NRy3y8MjfdU6j2pLietZpqi_m3UuHU3BtcXIBmyYu_-lshj1A57A3CB",
+        "token_type": "bearer"
+    }
+    oauth2_dict = {
+        "client_id": "1ZOgqvjvFCjdsX2qdZlZ8Bs2RzYvBmwt",
+        "token": token
+    }
+
+    base_url = "https://bouncybear.atlassian.net/wiki"
+
+    # page_ids = ["<page_id_1>", "<page_id_2>", "<page_id_3"]
+    space_key = "~712020d26a0bf843a04a54b0e4c6254eb599ec"
+
+    reader = ConfluenceReader(base_url=base_url)#, oauth2=oauth2_dict)
+    documents = reader.load_data(space_key=space_key, include_attachments=True, page_status="current")
+    print(documents)
+    # documents.extend(reader.load_data(page_ids=page_ids, include_children=True, include_attachments=True))
+    return documents
+
+if __name__ == '__main__':
+    read_confluence()
     dir = os.getcwd()
 
     # load documents

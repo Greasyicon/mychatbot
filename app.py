@@ -49,7 +49,7 @@ def chat_bot(user_input=None, is_web_mode=False):
 
 def doc_bot(user_input=None, is_web_mode=False):
     if is_web_mode:
-        return query_engine.query(user_input).message.content
+        return query_engine.query(user_input)#.message.content
     else:
         print("\n==============================================================================")
         print("Entering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")
