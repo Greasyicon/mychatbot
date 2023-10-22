@@ -152,7 +152,10 @@ if bot_mode=='docbot':
 
 print("\nMaya Chatbot assistant: Bye Dear!")
 ######################## ALL DONE ############################################
+
+
 ## Uncomment the following to Create chatbot use hugging face transformers
+
 ## Using Hugging Face transformers
 # from transformers import AutoTokenizer, AutoModelForCausalLM
 

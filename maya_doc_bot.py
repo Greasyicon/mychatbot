@@ -36,40 +36,55 @@ def run_local():
     myllm.maya_ai(query_engine)
 
 def read_confluence():
+
     from llama_hub.confluence import ConfluenceReader
 
-    token = {
-        "access_token": "ATOAdX1C386QZRWLw46E_NRy3y8MjfdU6j2pLietZpqi_m3UuHU3BtcXIBmyYu_-lshj1A57A3CB",
-        "token_type": "bearer"
-    }
-    oauth2_dict = {
-        "client_id": "1ZOgqvjvFCjdsX2qdZlZ8Bs2RzYvBmwt",
-        "token": token
-    }
+    base_url = "https://bouncybear.atlassian.net"
 
-    base_url = "https://bouncybear.atlassian.net/wiki"
-
-    # page_ids = ["<page_id_1>", "<page_id_2>", "<page_id_3"]
+    page_ids = ['393222']
     space_key = "~712020d26a0bf843a04a54b0e4c6254eb599ec"
 
     reader = ConfluenceReader(base_url=base_url)#, oauth2=oauth2_dict)
-    documents = reader.load_data(space_key=space_key, include_attachments=True, page_status="current")
-    print(documents)
+    # documents = reader.load_data(page_ids=page_ids, include_children=False, include_attachments=True)
+    documents = reader.load_data(space_key=space_key, include_attachments=False, page_status="current")
     # documents.extend(reader.load_data(page_ids=page_ids, include_children=True, include_attachments=True))
+
+    ## Using confluence reader to read
+    # from atlassian import Confluence
+    #
+    # # Initialize the Confluence instance
+    # confluence = Confluence(
+    #     url=base_url,
+    #     username=os.getenv('CONFLUENCE_USERNAME'),
+    #     password=os.getenv('CONFLUENCE_API_TOKEN'),
+    #     cloud=True  # Set to True if you are using Confluence Cloud
+    # )
+    #
+    # # Get page content
+    # for page_id in page_ids:
+    #     content = confluence.get_page_by_id(page_id, expand='body.storage')
+    #     # Print page title and content
+    #     print("Title:", content['title'])
+    #     print("Content:", content['body']['storage']['value'])
+
     return documents
 
 if __name__ == '__main__':
-    read_confluence()
-    dir = os.getcwd()
+
 
     # load documents
-    documents = SimpleDirectoryReader(os.path.join(dir, "data")).load_data()
-
+    #  From local Directory
+    dir = os.getcwd()
+    local_documents = SimpleDirectoryReader(os.path.join(dir, "data")).load_data()
+    # From Confluence
+    confluence_documents = read_confluence()
+    # Combine documents
+    documents = local_documents + confluence_documents
     service_context = ServiceContext.from_defaults(
         llm=myllm.my_llm(), embed_model="local:BAAI/bge-small-en")
 
     set_global_service_context(service_context)
-
+    # indexing documents
     index = VectorStoreIndex.from_documents(documents)  # , service_context=service_context)
     # Persist the index to disk
     # index.storage_context.persist(persist_dir="index_storage")
