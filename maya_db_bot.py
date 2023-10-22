@@ -134,10 +134,9 @@ def run_local():
 
 
 if __name__ == '__main__':
+
     # Start Indexing data
-    service_context = ServiceContext.from_defaults(
-        llm=myllm.my_llm(), embed_model="local:BAAI/bge-small-en"
-    )
+    service_context = ServiceContext.from_defaults(llm=myllm.my_llm(), embed_model="local:BAAI/bge-small-en")
     set_global_service_context(service_context)
 
     # Get structured data

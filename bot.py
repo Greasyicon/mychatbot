@@ -26,12 +26,12 @@ if token:
     # Use the token for your operations
     print(f"-----______________--------- Hugging Face Token is set") #
 else:
-    print("WARNING ---- ______ -----Hugging Face Token not set or not found! "
-          "May be Required to Download Model from Hugging Face hub.")
+    print(f"{bcolors.WARNING}WARNING ---- ______ -----Hugging Face Token not set or not found! "
+          f"May be Required to Download Model from Hugging Face hub.{bcolors.ENDC}")
 
 # use the Quantized model is cuda is available
 if torch.cuda.is_available():
-    print("Cuda is available! yay!")
+    print("\nCuda is available! yay!")
     cuda_ind = True
     hf_model_repo = "TheBloke/Llama-2-7b-Chat-GPTQ" # "TheBloke/Llama-2-13B-GPTQ" #
     t_dtype = torch.float16 # data type to float16 for quantized models
@@ -101,6 +101,7 @@ if (bot_mode=='chatbot'):
 
         # prepare message for HF
         messages = [ChatMessage(role="user", content=user_input)]
+        # get response from LLM for user query
         output_str_llama_index = llm.chat(messages)
 
         print(f"{bcolors.OKBLUE}Maya Chatbot {output_str_llama_index}{bcolors.ENDC}")
@@ -122,8 +123,7 @@ if bot_mode=='docbot':
     # load documents
     documents = SimpleDirectoryReader(os.path.join(dir, "data")).load_data()
     # Set service context for indexing data
-    service_context = ServiceContext.from_defaults(
-        llm=llm, embed_model="local:BAAI/bge-small-en")
+    service_context = ServiceContext.from_defaults(llm=llm, embed_model="local:BAAI/bge-small-en")
     set_global_service_context(service_context)
     # Create index
     index = VectorStoreIndex.from_documents(documents)  # , service_context=service_context)
@@ -144,7 +144,7 @@ if bot_mode=='docbot':
             break
 
         timeStart = time.time()
-
+        # get response from LLM for user query
         response = query_engine.query(user_input)
         print(f"\n{bcolors.OKBLUE}Maya Chatbot assistant: {response}{bcolors.ENDC}")
 
