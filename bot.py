@@ -57,9 +57,12 @@ query_wrapper_prompt = PromptTemplate(
     "[INST]<<SYS>>\n" + SYSTEM_PROMPT + "<</SYS>>\n\n{query_str}[/INST] "
 )
 # Max output Tokens expected
-max_output_tokens = 100
-# print(
-#     f"Increasing max output tokens will increase the model response time. Max Output Tokens is {max_output_tokens}")
+max_output_tokens = 20
+max_msg = ''
+if max_output_tokens > 100:
+    max_msg = 'Increasing max output tokens will increase the model response time.'
+print(
+    f"Max Output Tokens is {max_output_tokens}. {max_msg}")
 
 # Set the Hugging Face pipeline
 llm = HuggingFaceLLM(
@@ -137,7 +140,7 @@ if bot_mode=='docbot':
     print("Entering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")
     print("==============================================================================")
     while (True):
-        user_input = input(f"\n{bcolors.OKCYAN}Enter your query here, Sire: {bcolors.ENDC}")
+        user_input = input(f"\n{bcolors.OKCYAN}Enter your query here: {bcolors.ENDC}")
         # input_token_length = input('Enter length: ')
 
         if (user_input.lower() == 'exit'):
@@ -150,15 +153,15 @@ if bot_mode=='docbot':
 
         print("Time taken: ", -timeStart + time.time())
 
-print("\nMaya Chatbot assistant: Bye Dear!")
+print("\nMaya Chatbot assistant: GoodBye!")
 ######################## ALL DONE ############################################
 
 
 ## Uncomment the following to Create chatbot use hugging face transformers
 
-## Using Hugging Face transformers
+# # Using Hugging Face transformers
 # from transformers import AutoTokenizer, AutoModelForCausalLM
-
+#
 # # tokenizer
 # tokenizer = AutoTokenizer.from_pretrained(hf_model_repo, use_fast=True, token=token)
 # # model
