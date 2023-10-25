@@ -35,7 +35,7 @@ os.environ['CURL_CA_BUNDLE'] = ''
 token = os.environ.get('HUGGINGFACE_TOKEN')
 if token:
     # Use the token for your operations
-    print(f"-----______________--------- Hugging Face Token is set") #
+    print(f"-----______--------- Hugging Face Token is set") #
 else:
     print(f"{bcolors.WARNING}WARNING ---- ______ -----Hugging Face Token not set or not found! "
           f"May be Required to Download Model from Hugging Face hub.{bcolors.ENDC}")
