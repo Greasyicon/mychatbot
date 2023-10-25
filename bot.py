@@ -1,3 +1,12 @@
+instructions = """
+In order to use Llama-2, you need to first raise a request on
+Meta https://ai.meta.com/resources/models-and-libraries/llama-downloads/.
+If you plan to use it with Hugging Face, you need to raise a separate request on the model page in
+Hugging Face - https://huggingface.co/meta-llama/Llama-2-7b-chat-hf.
+( Make sure you are using the same email ids in both places ).
+Generate a "Read" Access Token for log in to Hugging Face -  https://huggingface.co/settings/tokens
+"""
+
 
 import torch
 import time, os
@@ -12,6 +21,8 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+print(f"{bcolors.OKBLUE}Maya Chatbot {instructions}{bcolors.ENDC}")
 
 # Using llama-index Huggingface LLm pipeline
 from llama_index.llms import HuggingFaceLLM
@@ -31,7 +42,7 @@ else:
 
 # use the Quantized model is cuda is available
 if torch.cuda.is_available():
-    print("\nCuda is available! yay!")
+    print("\nCuda is available! yay! Speeding...!")
     cuda_ind = True
     hf_model_repo = "TheBloke/Llama-2-7b-Chat-GPTQ" # "TheBloke/Llama-2-13B-GPTQ" #
     t_dtype = torch.float16 # data type to float16 for quantized models
@@ -57,7 +68,7 @@ query_wrapper_prompt = PromptTemplate(
     "[INST]<<SYS>>\n" + SYSTEM_PROMPT + "<</SYS>>\n\n{query_str}[/INST] "
 )
 # Max output Tokens expected
-max_output_tokens = 20
+max_output_tokens = 10
 max_msg = ''
 if max_output_tokens > 100:
     max_msg = 'Increasing max output tokens will increase the model response time.'
@@ -81,7 +92,7 @@ llm = HuggingFaceLLM(
 bot_modes = ['chatbot', 'docbot']
 bot_mode_default = 'chatbot' #'docbot'
 
-bot_mode = input('Enter the bot mode (chtabot or docbot): ')
+bot_mode = input('Enter the bot mode (chatbot or docbot): ')
 if bot_mode not in bot_modes:
     bot_mode = bot_mode_default
     print(f"Bot Model not selected, so using default bot model {bot_mode_default}")
@@ -94,7 +105,7 @@ if (bot_mode=='chatbot'):
     print("Entering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")
     print("==============================================================================")
     while (True):
-        user_input = input(f"{bcolors.OKCYAN}Enter your query here, Sire: {bcolors.ENDC}")
+        user_input = input(f"{bcolors.OKCYAN}Enter your query here: {bcolors.ENDC}")
         # input_token_length = input('Enter output length expected (more length -> more response time): ')
 
         if (user_input == 'exit'):
@@ -104,6 +115,8 @@ if (bot_mode=='chatbot'):
 
         # prepare message for HF
         messages = [ChatMessage(role="user", content=user_input)]
+
+        print("Answering ....")
         # get response from LLM for user query
         output_str_llama_index = llm.chat(messages)
 
@@ -147,6 +160,7 @@ if bot_mode=='docbot':
             break
 
         timeStart = time.time()
+        print("Answering ....")
         # get response from LLM for user query
         response = query_engine.query(user_input)
         print(f"\n{bcolors.OKBLUE}Maya Chatbot assistant: {response}{bcolors.ENDC}")
@@ -183,7 +197,7 @@ print("\nMaya Chatbot assistant: GoodBye!")
 #         break
 #     timeStart = time.time()
 #
-#
+#     print("Answering ....")
 #     inputs = tokenizer.encode(
 #         user_input,
 #         return_tensors="pt"
