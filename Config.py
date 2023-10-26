@@ -23,19 +23,28 @@ else:
 
 # To load a specific model, specify the model name:
 import torch
+
 # use the Quantized model is cuda is available
 if torch.cuda.is_available():
+    print("\nCuda is available! yay! Speeding...!")
+    cuda_ind = True
     hf_model_repo = "TheBloke/Llama-2-7b-Chat-GPTQ" # "TheBloke/Llama-2-13B-GPTQ" #
+    t_dtype = torch.float16 # data type to float16 for quantized models
+    max_new_tokens = 100
 else:
-    hf_model_repo = "meta-llama/Llama-2-7b-chat-hf"
+    cuda_ind = False
+    hf_model_repo = "meta-llama/Llama-2-7b-chat-hf"#, "meta-llama/Llama-2-7b-hf", "meta-llama/Llama-2-13b-hf"
+    t_dtype = torch.float32 # data type to float32 or float16 for non-quantized models
+    max_new_tokens = 20 # slow response without cuda
+
 
 print(f"The model selected is : {hf_model_repo}")
 
 db_cred = {
-    'username' : 'llama',
-    'password' : 'llama',
+    'username' : 'abcproc',
+    'password' : 'abcproc',
     'host' : 'localhost',
     'port' : '5432',
-    'database' : 'llama',
+    'database' : 'abcproc_opt',
     'schema' : 'public'
 }

@@ -147,7 +147,8 @@ if bot_mode=='docbot':
     # index.storage_context.persist(persist_dir="index_storage")
 
     # Create an engine to query the document
-    query_engine = index.as_query_engine()
+    query_engine = index.as_query_engine() #response_mode="tree_summarize"
+    # chat_engine = index.as_chat_engine()
 
     print("\n==============================================================================")
     print("Entering into Q&A mode. Please enter - 'exit' anytime to close Q&A session.")

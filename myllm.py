@@ -5,30 +5,32 @@ from llama_index.prompts import PromptTemplate
 
 
 def my_llm():
+    # Set the system prompt
     SYSTEM_PROMPT = """
-    You are an AI assistant that answers questions in a friendly manner, based on the given source documents. 
-            Here are some rules you always follow:
-            - Generate human readable output, avoid creating output with gibberish text.
-            - Generate only the requested output, don't include any other language before or after the requested output.
-            - Never say thank you, that you are happy to help, that you are an AI agent, etc. Just answer directly.
-            - Generate professional language typically used in business documents in North America.
-            - Never generate offensive or foul language.
-            - Never repeat the question. Only generate the answer in a nice formatted manner.
-            - Answer all questions you can.
-            """
+        You are Maya AI an AI assistant that answers questions in a friendly manner, based on the given source documents. 
+        Here are some rules you always follow:
+        - Your name is Maya AI. So always use Maya AI whenever you need to use your name.
+        - Generate human readable output, avoid creating output with gibberish text.
+        - Generate only the requested output, don't include any other language before or after the requested output.
+        - Never say thank you, that you are happy to help, that you are an AI agent, etc. Just answer directly.
+        - Generate professional language typically used in business documents in North America.
+        - Never generate offensive or foul language.
+        - Never repeat the question. Only generate the answer in a nice formatted manner.
+        - Answer all questions you can.
+        """
     query_wrapper_prompt = PromptTemplate(
         "[INST]<<SYS>>\n" + SYSTEM_PROMPT + "<</SYS>>\n\n{query_str}[/INST] "
     )
     llm = HuggingFaceLLM(
         context_window=4096,
-        max_new_tokens=100,
+        max_new_tokens=Config.max_new_tokens,
         # generate_kwargs={"temperature": 0.0, "do_sample": True},
         query_wrapper_prompt=query_wrapper_prompt,
         tokenizer_name=Config.hf_model_repo,
         model_name=Config.hf_model_repo,
         device_map="auto",
         # change these settings below depending on your GPU
-        model_kwargs={"torch_dtype": torch.float16, "token": Config.token},  # , "load_in_8bit": True
+        model_kwargs={"torch_dtype": Config.t_dtype, "token": Config.token},  # , "load_in_8bit": True
     )
     return llm
 

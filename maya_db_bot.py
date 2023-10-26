@@ -145,10 +145,10 @@ if __name__ == '__main__':
 
     engine = get_db_con(**Config.db_cred)
 
-    # Add unstructured data as table - for context
-    setup_db_for_documents(engine=engine)
-    # insert the documents into table
-    insert_pdf_content_to_db(engine, document_directory=f"{os.getcwd()}\data")
+    # # Add unstructured data as table - for context
+    # setup_db_for_documents(engine=engine)
+    # # insert the documents into table
+    # insert_pdf_content_to_db(engine, document_directory=f"{os.getcwd()}\data")
 
     # load all table definitions
     metadata_obj = MetaData()
@@ -170,6 +170,13 @@ if __name__ == '__main__':
     obj_index = ObjectIndex.from_objects(table_schema_objs, table_node_mapping, VectorStoreIndex, )
     # index = VectorStoreIndex.from_documents(documents)#, service_context=service_context)
 
+    # index1 = VectorStoreIndex.from_documents(notion_docs)
+    # index2 = VectorStoreIndex.from_documents(slack_docs)
+    #
+    # graph = ComposableGraph.from_indices(SummaryIndex, [index1, index2], index_summaries=["summary1", "summary2"])
+    # query_engine = graph.as_query_engine()
+    # https://gpt-index.readthedocs.io/en/latest/examples/composable_indices/city_analysis/PineconeDemo-CityAnalysis.html
+
     # query_engine = index.as_query_engine()
     ## Persist the index to disk
     ## index.storage_context.persist(persist_dir="index_storage")
@@ -178,7 +185,7 @@ if __name__ == '__main__':
     # Note that we pass in the ObjectRetriever so that we can dynamically retrieve the table during query-time.
     # ObjectRetriever: A retriever that retrieves a set of query engine tools.
     query_engine = SQLTableRetrieverQueryEngine(
-        sql_database, obj_index.as_retriever(similarity_top_k=2), service_context=service_context, )
+        sql_database, obj_index.as_retriever(similarity_top_k=1), service_context=service_context, )
 
 
     mode = input("\n\nEnter 'web' to run on Flask or 'local' to run locally: ").strip().lower()
