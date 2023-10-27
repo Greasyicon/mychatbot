@@ -3,7 +3,11 @@ import torch
 from llama_index.llms import HuggingFaceLLM
 from llama_index.prompts import PromptTemplate
 
-
+# from llama_index.query_engine import RetryQueryEngine
+# from llama_index.evaluation import RelevancyEvaluator
+#
+# query_response_evaluator = RelevancyEvaluator()
+from llama_index.llms import OpenAI
 def my_llm():
     # Set the system prompt
     SYSTEM_PROMPT = """
@@ -32,7 +36,7 @@ def my_llm():
         # change these settings below depending on your GPU
         model_kwargs={"torch_dtype": Config.t_dtype, "token": Config.token},  # , "load_in_8bit": True
     )
-    return llm
+    return llm#OpenAI(temperature=0, model="text-davinci-003", max_tokens=20)
 
 def maya_ai(query_engine):
     print("\n==============================================================================")
@@ -51,6 +55,12 @@ def maya_ai(query_engine):
             # response = composite_engine.composite_query(input_str)
             # response = composite_engine.unified_query(input_str)
             response = query_engine.query(user_input)
+
+            # retry_query_engine = RetryQueryEngine(
+            #     query_engine, query_response_evaluator
+            # )
+            # retry_response = retry_query_engine.query(user_input)
+            # print(retry_response)
 
             print(f"\n{Config.bcolors.OKBLUE}Maya Chatbot assistant: {response}{Config.bcolors.ENDC}")
             try:

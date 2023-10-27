@@ -16,11 +16,10 @@ class bcolors:
 token = os.environ.get('HUGGINGFACE_TOKEN')
 if token:
     # Use the token for your operations
-    print(f"\n-----______________--------- Hugging Face Token is set") #
+    print(f"-----______--------- Hugging Face Token is set") #
 else:
-    print("\nWARNING ---- ______ -----Hugging Face Token not set or not found! "
-          "May be Required to Download Model from Hugging Face hub.")
-
+    print(f"{bcolors.WARNING}WARNING ---- ______ -----Hugging Face Token not set or not found! "
+          f"May be Required to Download Model from Hugging Face hub.{bcolors.ENDC}")
 # To load a specific model, specify the model name:
 import torch
 
@@ -30,7 +29,7 @@ if torch.cuda.is_available():
     cuda_ind = True
     hf_model_repo = "TheBloke/Llama-2-7b-Chat-GPTQ" # "TheBloke/Llama-2-13B-GPTQ" #
     t_dtype = torch.float16 # data type to float16 for quantized models
-    max_new_tokens = 100
+    max_new_tokens = 500
 else:
     cuda_ind = False
     hf_model_repo = "meta-llama/Llama-2-7b-chat-hf"#, "meta-llama/Llama-2-7b-hf", "meta-llama/Llama-2-13b-hf"
@@ -41,10 +40,10 @@ else:
 print(f"The model selected is : {hf_model_repo}")
 
 db_cred = {
-    'username' : 'abcproc',
-    'password' : 'abcproc',
+    'username' : 'llama',
+    'password' : 'llama',
     'host' : 'localhost',
     'port' : '5432',
-    'database' : 'abcproc_opt',
+    'database' : 'llama',
     'schema' : 'public'
 }

@@ -1,49 +1,31 @@
-import logging, time
+# import logging, time
 import sys, os
+os.environ['CURL_CA_BUNDLE'] = ''
 import pandas as pd
-import myllm, Config
+import Config
+import myllm
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
+# logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+# logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
 import torch
-from llama_index import VectorStoreIndex, SimpleDirectoryReader, ServiceContext, set_global_service_context
+from llama_index import VectorStoreIndex, SimpleDirectoryReader, ServiceContext, set_global_service_context, SQLDatabase
 from llama_index.indices.struct_store import SQLTableRetrieverQueryEngine
+from llama_index.indices.struct_store.sql_query import NLSQLTableQueryEngine
+from llama_index.indices.vector_store import VectorIndexAutoRetriever
 from llama_index.objects import SQLTableNodeMapping, ObjectIndex, SQLTableSchema
-from llama_index import SQLDatabase
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Text, inspect
-
-
-class CompositeQueryEngine:
-    def __init__(self, sql_engine, pdf_engine):
-        self.sql_engine = sql_engine
-        self.pdf_engine = pdf_engine
-
-    def composite_query(self, query_str):
-        # Example heuristic: If the query contains "SELECT", use SQL engine
-        if "SELECT" in query_str.upper():
-            return self.sql_engine.query(query_str)
-        # Otherwise, use the PDF engine
-        else:
-            return self.pdf_engine.query(query_str)
-
-    def unified_query(self, query_str):
-        try:
-            sql_response = self.sql_engine.query(query_str)
-            doc_response = self.pdf_engine.query(query_str)
-
-            # Combine results as desired. This is a simple example that concatenates the responses.
-            # combined_response = {
-            #     'sql_response': sql_response,
-            #     'doc_response': doc_response,
-            # }
-            combined_response = f"{sql_response} \n {doc_response}"
-            return combined_response
-
-        except Exception as e:
-            print(f"ERROR: {e}")
-            return None
-
+from sqlalchemy import create_engine, MetaData#, Table, Column, Integer, String, Text, inspect
+from llama_index.tools.query_engine import QueryEngineTool
+from llama_index.tools import ToolMetadata
+from llama_index.query_engine import SubQuestionQueryEngine, SQLJoinQueryEngine, RetrieverQueryEngine
+from llama_index.callbacks import CallbackManager, LlamaDebugHandler
+from llama_index.selectors.llm_selectors import (
+    LLMSingleSelector,
+    LLMMultiSelector,
+)
+from llama_index.query_engine.router_query_engine import RouterQueryEngine
+# import nest_asyncio
+# nest_asyncio.apply()
 
 def get_db_con(database, host, password, port, schema, username):
     # Connect to the database
@@ -51,66 +33,9 @@ def get_db_con(database, host, password, port, schema, username):
                            connect_args={'options': f'-csearch_path={schema}'}, echo=False)
     return engine
 
-
-
-# Setup Database for Documents
-def setup_db_for_documents(engine):
-    # Check if the documents table already exists, if not, create it
-    inspector = inspect(engine)
-    if "documents" not in inspector.get_table_names():
-        documents_table = Table('documents', MetaData(),
-                                Column('id', Integer, primary_key=True),
-                                Column('document_name', String),
-                                Column('content', Text))
-        documents_table.create(engine)
-
-    return engine
-
-
-# Insert PDF Contents into Database:
-def insert_pdf_content_to_db(engine, document_directory):
-    documents = SimpleDirectoryReader(
-        document_directory
-    ).load_data()
-    # List to hold the document data
-    data = []
-    for doc in documents:
-        # if doc_name.endswith('.pdf'):
-        # doc_path = os.path.join(document_directory, doc_name)
-        # content = extract_text_from_pdf(doc_path)
-        try:
-            doc_name = doc.metadata['file_name']
-            content = doc.text
-        except:
-            doc_name = 'file'
-            content = doc
-        data.append({"document_name": doc_name, "content": content})
-
-    # Create a DataFrame from the data
-    df = pd.DataFrame(data)
-
-    # Write the DataFrame to the database
-    df.to_sql('documents', con=engine, if_exists='append', index=False)
-
-
-def query_documents(engine, query_str, service_context, metadata_obj):
-    # Reflect the database changes
-    metadata_obj.reflect(engine)
-
-    sql_database = SQLDatabase(engine)
-    table_node_mapping = SQLTableNodeMapping(sql_database)
-    table_schema_objs = [SQLTableSchema(table_name=table_name) for table_name in metadata_obj.tables.keys()]
-
-    obj_index = ObjectIndex.from_objects(table_schema_objs, table_node_mapping, VectorStoreIndex)
-    sql_query_engine = SQLTableRetrieverQueryEngine(
-        sql_database, obj_index.as_retriever(similarity_top_k=2), service_context=service_context
-    )
-
-    return sql_query_engine.query(query_str)
-
 def chatbot_response(user_input):
-
     return query_engine.query(user_input)
+
 def run_web():
     # A simple Flask web server (you'd need to install Flask: pip install flask)
     from flask import Flask, request, jsonify, render_template
@@ -135,9 +60,13 @@ def run_local():
 
 if __name__ == '__main__':
 
-    # Start Indexing data
-    service_context = ServiceContext.from_defaults(llm=myllm.my_llm(), embed_model="local:BAAI/bge-small-en")
-    set_global_service_context(service_context)
+    # Using the LlamaDebugHandler to print the trace of the sub questions
+    # captured by the SUB_QUESTION callback event type
+    llama_debug = LlamaDebugHandler(print_trace_on_end=True)
+    callback_manager = CallbackManager([llama_debug])
+    service_context = ServiceContext.from_defaults(llm=myllm.my_llm(), embed_model="local:BAAI/bge-small-en",
+                                                callback_manager=callback_manager)
+    # set_global_service_context(service_context)
 
     # Get structured data
     # Connect to Postgres Database
@@ -150,43 +79,83 @@ if __name__ == '__main__':
     # # insert the documents into table
     # insert_pdf_content_to_db(engine, document_directory=f"{os.getcwd()}\data")
 
-    # load all table definitions
+    # Start Indexing data
+    # first load all SQL DB table definitions
     metadata_obj = MetaData()
     metadata_obj.reflect(engine)
     sql_database = SQLDatabase(engine)
     table_node_mapping = SQLTableNodeMapping(sql_database)
     table_schema_objs = [SQLTableSchema(table_name=table_name) for table_name in metadata_obj.tables.keys()]
 
-    # Add Unstructured Data  -  context
-    # print(dir)
-    # load documents
-    # documents = SimpleDirectoryReader(
-    #     f"{os.getcwd()}\data"
-    # ).load_data()
-    # print(documents)
-
     # We dump the table schema information into a vector index.
     # The vector index is stored within the context builder for future use.
     obj_index = ObjectIndex.from_objects(table_schema_objs, table_node_mapping, VectorStoreIndex, )
-    # index = VectorStoreIndex.from_documents(documents)#, service_context=service_context)
-
-    # index1 = VectorStoreIndex.from_documents(notion_docs)
-    # index2 = VectorStoreIndex.from_documents(slack_docs)
-    #
-    # graph = ComposableGraph.from_indices(SummaryIndex, [index1, index2], index_summaries=["summary1", "summary2"])
-    # query_engine = graph.as_query_engine()
-    # https://gpt-index.readthedocs.io/en/latest/examples/composable_indices/city_analysis/PineconeDemo-CityAnalysis.html
 
     # query_engine = index.as_query_engine()
     ## Persist the index to disk
     ## index.storage_context.persist(persist_dir="index_storage")
-
+    #https://gpt-index.readthedocs.io/en/latest/examples/query_engine/SQLJoinQueryEngine.html
     # We construct a SQLTableRetrieverQueryEngine.
     # Note that we pass in the ObjectRetriever so that we can dynamically retrieve the table during query-time.
     # ObjectRetriever: A retriever that retrieves a set of query engine tools.
-    query_engine = SQLTableRetrieverQueryEngine(
+    db_query_engine = SQLTableRetrieverQueryEngine(
         sql_database, obj_index.as_retriever(similarity_top_k=1), service_context=service_context, )
 
+    # NLSQLTableQueryEngine uses llama CPP and then uses 13b GGUF model which is not what we want
+    # db_query_engine = NLSQLTableQueryEngine(
+    #     sql_database=sql_database#, llm=myllm.my_llm()
+    #     # tables=["city_stats"],
+    # )
+
+
+    # Add Unstructured Data  -  context
+    # print(dir)
+    # load documents
+    documents = SimpleDirectoryReader(f"{os.getcwd()}\data").load_data()
+    doc_index = VectorStoreIndex.from_documents(documents, use_async=True)#, service_context=service_context)
+    doc_query_engine = doc_index.as_query_engine()
+
+    doc_query_engine_tool = QueryEngineTool(
+            query_engine=doc_query_engine,
+            metadata=ToolMetadata(
+                name="Paul Graham Essay",
+                description="Paul Graham essay on What I Worked On",
+            ),
+        )
+
+    db_query_engine_tool = QueryEngineTool(
+            query_engine=db_query_engine,
+            metadata=ToolMetadata(
+                name="Postgres Data",
+                description="Data on Different customer and orders",
+            ),
+        )
+
+    ## Setup Query Engine Tools
+    query_engine_tools = [db_query_engine_tool, doc_query_engine_tool]
+
+
+    # todo: the SQLJoinQueryEngine and SubQuestionQueryEngine is not working with Llama 2 but works
+    #  with OpenAI which is default LLM
+
+    #  SQLJoinQueryEngine lets us pick the best query engine when there are multiple query engines
+    query_engine = SQLJoinQueryEngine(
+        db_query_engine_tool, doc_query_engine_tool,  service_context=service_context
+    )
+    # response = query_engine.query("Who purchased Laptop?")
+    # SubQuestionQueryEngine lets us break the complex query into multiple queries and then combine the response
+    # query_engine = SubQuestionQueryEngine.from_defaults(
+    #     query_engine_tools=query_engine_tools,
+    #     service_context=service_context,
+    #     use_async=True,
+    # )
+    # RouterQueryEngine lets us select one out of several candidate query engines to execute a query.
+    # This is also using GGUF model and not the one we select
+    # query_engine = RouterQueryEngine( #db_query_engine
+    #     selector=LLMMultiSelector.from_defaults(),
+    #     query_engine_tools=query_engine_tools,
+    #     # summarizer=tree_summarize,
+    # )
 
     mode = input("\n\nEnter 'web' to run on Flask or 'local' to run locally: ").strip().lower()
 

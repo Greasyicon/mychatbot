@@ -8,6 +8,9 @@ from llama_index import VectorStoreIndex, SimpleDirectoryReader, ServiceContext,
 
 from flask import Flask, render_template, request, jsonify
 
+from llama_index.callbacks import CallbackManager, LlamaDebugHandler
+from llama_index.tools import QueryEngineTool, ToolMetadata
+from llama_index.query_engine import SubQuestionQueryEngine
 def chatbot_response(user_input):
 
     return query_engine.query(user_input)
@@ -77,12 +80,15 @@ if __name__ == '__main__':
     dir = os.getcwd()
     local_documents = SimpleDirectoryReader(os.path.join(dir, "data")).load_data()
     # From Confluence
-    confluence_documents = read_confluence()
+    confluence_documents = []#read_confluence()
     # Combine documents
     documents = local_documents + confluence_documents
-    service_context = ServiceContext.from_defaults(
-        llm=myllm.my_llm(), embed_model="local:BAAI/bge-small-en")
-
+    # Using the LlamaDebugHandler to print the trace of the sub questions
+    # captured by the SUB_QUESTION callback event type
+    llama_debug = LlamaDebugHandler(print_trace_on_end=True)
+    callback_manager = CallbackManager([llama_debug])
+    service_context = ServiceContext.from_defaults(llm=myllm.my_llm(), embed_model="local:BAAI/bge-small-en",
+                                                   callback_manager=callback_manager)
     set_global_service_context(service_context)
     # indexing documents
     index = VectorStoreIndex.from_documents(documents)  # , service_context=service_context)
@@ -90,6 +96,25 @@ if __name__ == '__main__':
     # index.storage_context.persist(persist_dir="index_storage")
 
     query_engine = index.as_query_engine()
+
+
+    # ## Setup sub question query engine
+    # # setup base query engine as tool
+    # query_engine_tools = [
+    #     QueryEngineTool(
+    #         query_engine=query_engine,
+    #         metadata=ToolMetadata(
+    #             name="Paul Graham Essay",
+    #             description="Paul Graham essay on What I Worked On",
+    #         ),
+    #     ),
+    # ]
+    #
+    # query_engine = SubQuestionQueryEngine.from_defaults(
+    #     query_engine_tools=query_engine_tools,
+    #     service_context=service_context,
+    #     use_async=True,
+    # )
 
     mode = input("\n\nEnter 'web' to run on Flask or 'local' to run locally: ").strip().lower()
 
