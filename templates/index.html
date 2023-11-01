@@ -1,60 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Maya AI Chatbot</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="static/style.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.socket.io/5.3.6/socket.io.min.js"></script> <!-- Updated Socket.IO version -->
 </head>
-
 <body>
-    <div class="container">
-        <h1>Maya AI Chatbot</h1>
-        <div class="mode-selector">
-            <button id="chatbotMode" class="active">Chatbot Mode</button>
-            <button id="docbotMode">Docbot Mode</button>
-        </div>
-        <div class="chat-interface">
-            <textarea id="userInput" placeholder="Enter your query here, Sire..."></textarea>
-            <button id="submit">Ask</button>
-            <div id="response"></div>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">Maya AI Chatbot</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <button id="chatbotMode" class="btn btn-primary active mr-2">Chatbot Mode</button>
+            </li>
+            <li class="nav-item">
+                <button id="docbotMode" class="btn btn-secondary">Docbot Mode</button>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container mt-5" id="chat">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    Chat Interface
+                </div>
+                <div class="card-body">
+                    <div id="response" class="messages mb-3"></div>
+                    <div class="input-group">
+                        <textarea id="userInput" class="form-control" placeholder="Enter your query here, Sire..." aria-label="User input" aria-describedby="button-addon2"></textarea>
+                        <div class="input-group-append">
+                            <button id="submit" class="btn btn-primary" type="button">Ask</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+</div>
 
-    <script>
-        let mode = 'chatbot'; // default mode
+<script src="static/script.js"></script>
 
-        // Mode selector logic
-        $('#chatbotMode').click(function() {
-            mode = 'chatbot';
-            $('.mode-selector button').removeClass('active');
-            $(this).addClass('active');
-        });
-
-        $('#docbotMode').click(function() {
-            mode = 'docbot';
-            $('.mode-selector button').removeClass('active');
-            $(this).addClass('active');
-        });
-
-        // Form submission logic
-        $('#submit').click(function() {
-            const message = $('#userInput').val();
-            $.ajax({
-                url: '/ask',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ message: message, mode: mode }),
-                dataType: 'json',
-                success: function(data) {
-                    $('#response').text(data.response);
-                }
-            });
-        });
-    </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 </body>
-
 </html>

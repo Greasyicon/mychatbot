@@ -29,7 +29,7 @@ if torch.cuda.is_available():
     cuda_ind = True
     hf_model_repo = "TheBloke/Llama-2-7b-Chat-GPTQ" # "TheBloke/Llama-2-13B-GPTQ" #
     t_dtype = torch.float16 # data type to float16 for quantized models
-    max_new_tokens = 500
+    max_new_tokens = 4
 else:
     cuda_ind = False
     hf_model_repo = "meta-llama/Llama-2-7b-chat-hf"#, "meta-llama/Llama-2-7b-hf", "meta-llama/Llama-2-13b-hf"
