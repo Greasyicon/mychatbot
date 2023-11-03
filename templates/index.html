@@ -28,25 +28,33 @@
     </div>
 </nav>
 
-<div class="container mt-5" id="chat">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    Chat Interface
-                </div>
-                <div class="card-body">
-                    <div id="response" class="messages mb-3"></div>
-                    <form id="chatForm">
-                        <div class="input-group">
-                            <textarea id="userInput" class="form-control" placeholder="Enter your query here, Sire..." aria-label="User input" aria-describedby="button-addon2"></textarea>
-                            <div class="input-group-append">
-                                <button id="submit" class="btn btn-primary" type="submit">Ask</button>
-                            </div>
+<div class="chat-wrapper">
+    <div class="chat-content">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            Chat Interface
                         </div>
-                    </form>
+                        <div class="card-body">
+                            <div id="response" class="messages mb-3"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
+    <div class="user-input">
+        <div class="container">
+            <form id="chatForm">
+                <div class="input-group">
+                    <textarea id="userInput" class="form-control" placeholder="Enter your query here, Sire..." aria-label="User input" aria-describedby="button-addon2"></textarea>
+                    <div class="input-group-append">
+                        <button id="submit" class="btn btn-primary" type="submit">Ask</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
