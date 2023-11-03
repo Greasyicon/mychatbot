@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="static/style.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.socket.io/5.3.6/socket.io.min.js"></script> <!-- Updated Socket.IO version -->
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 </head>
 <body>
 
@@ -37,12 +37,14 @@
                 </div>
                 <div class="card-body">
                     <div id="response" class="messages mb-3"></div>
-                    <div class="input-group">
-                        <textarea id="userInput" class="form-control" placeholder="Enter your query here, Sire..." aria-label="User input" aria-describedby="button-addon2"></textarea>
-                        <div class="input-group-append">
-                            <button id="submit" class="btn btn-primary" type="button">Ask</button>
+                    <form id="chatForm">
+                        <div class="input-group">
+                            <textarea id="userInput" class="form-control" placeholder="Enter your query here, Sire..." aria-label="User input" aria-describedby="button-addon2"></textarea>
+                            <div class="input-group-append">
+                                <button id="submit" class="btn btn-primary" type="submit">Ask</button>
+                            </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>

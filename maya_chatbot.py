@@ -14,7 +14,7 @@ socketio = SocketIO(app)
 def chatbot_response(user_input):
     print ("User input is -", user_input)
     messages = [ChatMessage(role="user", content=user_input)]
-    return llm.chat(messages)
+    return llm.chat(messages).message.content
 
 @app.route('/')
 def index():
@@ -31,14 +31,17 @@ def handle_disconnect():
 def handle_message(data):
     message = data['message']
     mode = data['mode']
+    socketio.emit('message', {'user': 'You', 'text': f"{message}"})
     timeStart = time.time()
     response = chatbot_response(message)
 
-    print(f"{Config.bcolors.OKBLUE}Maya Chatbot {response}{Config.bcolors.ENDC}")
+    print(f"{Config.bcolors.OKBLUE}Maya Chatbot: {response}{Config.bcolors.ENDC}")
 
     print("Time taken: ", -timeStart + time.time())
-    socketio.emit('message', {'user': 'You', 'text': message})
-    socketio.emit('message', {'user': 'Maya', 'text': response})
+
+    socketio.emit('message', {'user': 'Maya Chatbot', 'text': f"{response}"})
+
+    # socketio.emit('message', {'user': 'Server', 'text': f" {data['message']}"})
 
 
 def run_local():
